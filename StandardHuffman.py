@@ -1,64 +1,89 @@
+import heapq
+import os
+from collections import Counter
+class Node:
+    def __init__(self,char,freq):
+        self.char =  char
+        self.freq = freq
+        self.left = None
+        self.right = None
+    
+    def __lt__(self,other):
+        return self.freq < other.freq
+    
 class HuffmanCoding:
-    def __init__(self, input_file, output_file):
-        self.input_file = input_file
-        self.output_file = output_file
+    def __init__(self, inputFile, outputFile):
+        self.input_file = inputFile
+        self.output_file = outputFile
         self.probabilities = {}
         self.codes = {}
         self.reverse_mapping = {}
 
-
-    # Compression part
+        """ Compression part """
    
-
     def calculate_probabilities(self):
-        """
-        Reads the input file and calculates the probability of each symbol.
-        Returns a dictionary {symbol: probability}.
-        """
-        pass
+        # reading the file 
+        with open(self.input_file,"r",encoding="utf-8") as file:
+            txt = file.read()
+               
+        total = len(txt)
+        
+        # Calculate the frequency of each character
+        for char in txt:
+            self.probabilities[char]=self.probabilities.get(char,0)+1
+            
+        # count the probabilities
+        for char in self.probabilities:
+            self.probabilities[char] /=total
+        
+        return self.probabilities  
 
     def sort_probabilities_descending(self, probabilities):
-        """
-        Sorts the symbols based on probability in descending order.
-        Returns a list of tuples [(symbol, probability), ...].
-        """
-        pass
+        return sorted(probabilities.items(),key = lambda item: item[1],reverse=True)
+        
 
     def build_huffman_tree(self, sorted_probabilities):
-        """
-        Builds the Huffman tree by repeatedly summing the two smallest probabilities.
-        Returns the root of the tree.
-        """
-        pass
+        heap = [Node(char,freq) for char , freq in sorted_probabilities]
+        heapq.heapify(heap)
+        
+        while len(heap) > 1:
+            node1 = heapq.heappop(heap)
+            node2 = heapq.heappop(heap)
+            merged = Node(None, node1.freq + node2.freq)
+            merged.left = node1
+            merged.right = node2
+            heapq.heappush(heap, merged)
+
+        return heap[0] if heap else None
+
 
     def generate_codes(self, tree_root):
         """
         Traverses the Huffman tree to generate binary codes for each symbol.
         """
-        pass
+        def generate(node,curr_code):
+            if node is None:
+                return
+            if node.char is not None:
+                self.codes[node.char] = curr_code
+                self.reverse_mapping[curr_code] = node.char
+                return
+            generate(node.left, curr_code + "0")
+            generate(node.right, curr_code + "1")
 
-    def encode_data(self, data):
-        """
-        Encodes the input data using the generated Huffman codes.
-        Returns the bitstring.
-        """
-        pass
+        generate(tree_root, "")
+        return self.codes
+            
 
-    def save_compressed_file(self, bitstring):
-        """
-        Saves the compressed data as binary (actual bits) to the output file.
-        Overhead (e.g., codes or metadata) may be stored in a readable format.
-        """
-        pass
+   
 
     def compress(self):
         """
         Main function to perform compression:
         1. Calculate probabilities
-        2. Sort descending
-        3. Build Huffman tree
-        4. Generate codes
-        5. Encode and save to binary file
+        2. Sort descending and Build Huffman tree
+        3. Generate codes
+        4. Encode and save to binary file
         """
         pass
 
