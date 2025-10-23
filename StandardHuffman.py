@@ -78,37 +78,58 @@ class HuffmanCoding:
    
 
     def compress(self):
-        """
-        Main function to perform compression:
-        1. Calculate probabilities
-        2. Sort descending and Build Huffman tree
-        3. Generate codes
-        4. Encode and save to binary file
-        """
-        pass
+        probabilities = self.calculate_probabilities()
+        sorted_probabilities = self.sort_probabilities_descending(probabilities)
+        huffman_tree_root = self.build_huffman_tree(sorted_probabilities)
+        self.generate_codes(huffman_tree_root)
+        
+        # Encoding the data
+        with open(self.input_file, "r", encoding="utf-8") as file:
+            txt = file.read()
+        
+        encoded_data = ""
+        for char in txt:
+            encoded_data += self.codes[char]
+        
+        with open(self.output_file, "w", encoding="utf-8") as output:
+            output.write(encoded_data)
+
+        print("File compressed and saved to", self.output_file)
+        print("Original size:", len(txt), "characters")
+        print("Compressed size:", len(encoded_data), "bits")
+        print("Compression Ratio:", len(encoded_data)/ (len(txt)*8))
+        print("Huffman Codes:", self.codes)
+        print("Encoded data:", encoded_data)
 
 
     # Decompression part
    
 
     def load_compressed_file(self):
-        """
-        Loads the compressed binary file and retrieves the bitstream and any stored metadata.
-        """
-        pass
+
+        with open(self.input_file, "r") as file:
+            compressed_data = file.read()
+        return compressed_data
 
     def decode_data(self, bitstring):
-        """
-        Decodes the bitstring using the stored Huffman codes.
-        Returns the original text.
-        """
-        pass
+        current_code = ""
+        decoded_text = ""
+
+        for bit in bitstring:
+            current_code += bit
+            if current_code in self.reverse_mapping:
+                character = self.reverse_mapping[current_code]
+                decoded_text += character
+                current_code = ""
+
+        return decoded_text
 
     def save_decompressed_file(self, data):
-        """
-        Writes the decompressed text to the output file.
-        """
-        pass
+        try :
+            with open(self.output_file, "w", encoding="utf-8") as file:
+                file.write(data)
+        except Exception as e:
+            print("Error saving decompressed file:", e)
 
     def decompress(self):
         """
