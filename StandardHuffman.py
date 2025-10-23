@@ -94,12 +94,7 @@ class HuffmanCoding:
         with open(self.output_file, "w", encoding="utf-8") as output:
             output.write(encoded_data)
 
-        print("File compressed and saved to", self.output_file)
-        print("Original size:", len(txt), "characters")
-        print("Compressed size:", len(encoded_data), "bits")
-        print("Compression Ratio:", len(encoded_data)/ (len(txt)*8))
-        print("Huffman Codes:", self.codes)
-        print("Encoded data:", encoded_data)
+        return encoded_data
 
 
     # Decompression part
@@ -132,10 +127,12 @@ class HuffmanCoding:
             print("Error saving decompressed file:", e)
 
     def decompress(self):
-        """
-        Main function to perform decompression:
-        1. Load compressed file
-        2. Decode bitstream
-        3. Save decompressed text
-        """
-        pass
+        probabilities = self.calculate_probabilities()
+        sorted_probabilities = self.sort_probabilities_descending(probabilities)
+        huffman_tree_root = self.build_huffman_tree(sorted_probabilities)
+        self.generate_codes(huffman_tree_root)
+
+        compressed_data = self.load_compressed_file()
+        decompressed_text = self.decode_data(compressed_data)
+
+        return decompressed_text
