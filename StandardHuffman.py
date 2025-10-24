@@ -1,5 +1,5 @@
 import heapq
-import os
+import json
 from collections import Counter
 class Node:
     def __init__(self,char,freq):
@@ -72,7 +72,6 @@ class HuffmanCoding:
             generate(node.right, curr_code + "1")
 
         generate(tree_root, "")
-        return self.codes
             
 
    
@@ -91,20 +90,48 @@ class HuffmanCoding:
         for char in txt:
             encoded_data += self.codes[char]
         
-        with open(self.output_file, "w", encoding="utf-8") as output:
-            output.write(encoded_data)
+        constructed_bytes = bytearray() 
+        i = 0; pad = 0
 
-        return encoded_data
+        while (i < len(encoded_data)):
+            new_byte = encoded_data[i : i+8]
+            if (len(new_byte) < 8):
+                pad = 8 - len(new_byte)
+                new_byte += pad * '0'
+            constructed_bytes.append(int(new_byte, 2))
+            i += 8
+
+        json_header = json.dumps({"codes": self.codes, "pad": pad})
+        header_bytes = json_header.encode()
+
+        with open(self.output_file, "wb") as output:
+            output.write(header_bytes)
+            output.write(b"\n------\n")
+            output.write(constructed_bytes)
+
 
 
     # Decompression part
    
 
     def load_compressed_file(self):
+        with open(self.input_file, "rb") as file:
+            content = file.read()
+    
+        header_bytes, data_bytes = content.split(b"\n------\n", 1)
+        # returns the header as a dict 
+        header = json.loads(header_bytes.decode())
+        pad = header["pad"]
 
-        with open(self.input_file, "r") as file:
-            compressed_data = file.read()
-        return compressed_data
+        self.codes = header["codes"]
+        for char in self.codes:
+            self.reverse_mapping[self.codes[char]] = char
+        
+        compressed_data = ""
+        for b in data_bytes:
+            compressed_data += format(b, "08b")
+
+        return compressed_data[:len(compressed_data)-pad]
 
     def decode_data(self, bitstring):
         current_code = ""
@@ -127,12 +154,8 @@ class HuffmanCoding:
             print("Error saving decompressed file:", e)
 
     def decompress(self):
-        probabilities = self.calculate_probabilities()
-        sorted_probabilities = self.sort_probabilities_descending(probabilities)
-        huffman_tree_root = self.build_huffman_tree(sorted_probabilities)
-        self.generate_codes(huffman_tree_root)
-
         compressed_data = self.load_compressed_file()
         decompressed_text = self.decode_data(compressed_data)
 
-        return decompressed_text
+        with open(self.output_file, "w") as output:
+            output.write(decompressed_text)
